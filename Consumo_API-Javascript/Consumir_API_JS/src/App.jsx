@@ -1,43 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-
-function App() {
-  const [steamAchivementsList, setSteamAchivementsList] = useState([])
+function ChuckNorrisJokes() {
+  const [jokes, setJokes] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch Steam achievements list
-    fetch('https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?appid=730&key=EED5CF3679BA2F9B2AEAE8155317EC70&steamid=76561198127194058',{
-      mode: 'cors',
-      headers: {
-        'Access-Control-Allow-Origin':'https://store.steampowered.com/'
-      }
-    })
-     .then((response) => response.json())
-     .then((data) => {
-      console.log(data)
-        if (data.playerstats.achievements) {
-          const achievementsList = data.playerstats.achievements.map((achievement) => ({
-            name: achievement.apiname,
-            description: achievement.description.english,
-            completed: achievement.achieved,
-          }));
-          setSteamAchivementsList(achievementsList);
+    const fetchJokes = async () => {
+      try {
+        const response = await fetch("https://api.chucknorris.io/jokes/random");
+        if (!response.ok) {
+          throw new Error("Error al obtener los datos");
         }
-      });
+        const data = await response.json();
+        setJokes([data]); // Guardamos el chiste en un array para la tabla
+      } catch (error) {
+        console.error("Error al obtener el chiste:", error);
+        setError(error.message);
+      }
+    };
+    
+    fetchJokes();
   }, []);
 
   return (
-    <>
-<h1>Steam Achievements List</h1>
-<ul>
-  {steamAchivementsList.map((achievement, index) => (
-    <li key={index}>
-      <strong>{achievement.name}</strong>: {achievement.completed? 'Completed' : 'Not Completed'} - {achievement.description}
-    </li>
-  ))}
-</ul>
-    </>
-  )
+    <div>
+      <h2>Chistes de Chuck Norris</h2>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <table border="1">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Categoría</th>
+            <th>Chiste</th>
+          </tr>
+        </thead>
+        <tbody>
+          {jokes.map((joke) => (
+            <tr key={joke.id}>
+              <td>{joke.id}</td>
+              <td>{joke.categories.length > 0 ? joke.categories.join(", ") : "Sin categoría"}</td>
+              <td>{joke.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
-export default App
+export default ChuckNorrisJokes;
